@@ -16,7 +16,9 @@ import {
 } from 'recharts'
 import { Clock, ListChecks, Target, TrendingUp, FileUp, Swords, ArrowRight, Sparkles } from 'lucide-react'
 import { Card, SectionTitle, StatTile, Button, PriorityBadge, WeaknessTypeBadge, Progress } from '@/components/ui'
-import { SUBJECTS, WEAKNESSES, MASTERY_TREND, STUDY_STATS, EXAM_PAPERS } from '@/data/mock'
+import { SUBJECTS, MASTERY_TREND, STUDY_STATS } from '@/data/mock'
+import { useData } from '@/context/DataContext'
+import { useApp } from '@/context/AppContext'
 
 const SUBJECT_NAME: Record<string, string> = {
   chinese: '语文',
@@ -26,12 +28,16 @@ const SUBJECT_NAME: Record<string, string> = {
 }
 
 export default function Dashboard() {
+  const { grade } = useApp()
+  const { weaknesses, papers } = useData()
   const enabledSubjects = SUBJECTS.filter((s) => s.enabled)
   const radarData = enabledSubjects.map((s) => ({ subject: s.name, mastery: s.mastery }))
   const totalMinutes = STUDY_STATS.reduce((a, b) => a + b.minutes, 0)
   const totalQ = STUDY_STATS.reduce((a, b) => a + b.questions, 0)
   const avgAcc = Math.round(STUDY_STATS.reduce((a, b) => a + b.accuracy, 0) / STUDY_STATS.length)
-  const topWeakness = WEAKNESSES.filter((w) => w.priority === '高').slice(0, 3)
+  const topWeakness = [...weaknesses]
+    .sort((a, b) => ({ 高: 0, 中: 1, 低: 2 }[a.priority]) - ({ 高: 0, 中: 1, 低: 2 }[b.priority]))
+    .slice(0, 3)
 
   return (
     <div className="space-y-6">
@@ -69,7 +75,7 @@ export default function Dashboard() {
         <StatTile label="本周学习时长" value={Math.round(totalMinutes / 60)} unit="小时" hint="较上周 +8%" icon={<Clock size={16} />} />
         <StatTile label="本周刷题量" value={totalQ} unit="题" hint="较上周 +12%" icon={<ListChecks size={16} />} tone="#3b82f6" />
         <StatTile label="平均正确率" value={avgAcc} unit="%" hint="较上周 +3%" icon={<TrendingUp size={16} />} tone="#a855f7" />
-        <StatTile label="已诊断弱点" value={WEAKNESSES.length} unit="项" hint="高优先级 2 项" icon={<Target size={16} />} tone="#f59e0b" />
+        <StatTile label={`已诊断弱点（${grade}）`} value={weaknesses.length} unit="项" hint={`高优先级 ${weaknesses.filter((w) => w.priority === '高').length} 项`} icon={<Target size={16} />} tone="#f59e0b" />
       </div>
 
       {/* 主体网格：趋势 + 雷达 */}
@@ -121,31 +127,41 @@ export default function Dashboard() {
               </Link>
             }
           />
-          <div className="space-y-3">
-            {topWeakness.map((w) => {
-              const sub = SUBJECTS.find((s) => s.key === w.subject)!
-              return (
-                <div key={w.id} className="flex items-center gap-4 rounded-xl border p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: `${sub.color}1a`, color: sub.color }}>
-                    <span className="text-sm font-semibold">{sub.name}</span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="truncate text-sm font-medium text-main">{w.knowledge}</span>
-                      <PriorityBadge priority={w.priority} />
+          {topWeakness.length === 0 ? (
+            <div className="flex flex-col items-center rounded-xl border border-dashed py-10 text-center">
+              <p className="text-sm font-medium text-main">未上传信息，暂无弱点诊断</p>
+              <p className="mt-1 text-xs text-muted">录入试卷后，AI 将自动定位薄弱点</p>
+              <Link to="/paper-upload">
+                <Button className="mt-3" size="sm"><FileUp size={14} /> 去录入</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {topWeakness.map((w) => {
+                const sub = SUBJECTS.find((s) => s.key === w.subject)!
+                return (
+                  <div key={w.id} className="flex items-center gap-4 rounded-xl border p-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: `${sub.color}1a`, color: sub.color }}>
+                      <span className="text-sm font-semibold">{sub.name}</span>
                     </div>
-                    <div className="mt-1 flex items-center gap-2">
-                      <WeaknessTypeBadge type={w.type} />
-                      <span className="text-xs text-muted">失分率 {w.loseRate}%</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-sm font-medium text-main">{w.knowledge}</span>
+                        <PriorityBadge priority={w.priority} />
+                      </div>
+                      <div className="mt-1 flex items-center gap-2">
+                        <WeaknessTypeBadge type={w.type} />
+                        <span className="text-xs text-muted">失分率 {w.loseRate}%</span>
+                      </div>
+                    </div>
+                    <div className="hidden w-32 sm:block">
+                      <Progress value={w.mastery} tone={sub.color} showLabel />
                     </div>
                   </div>
-                  <div className="hidden w-32 sm:block">
-                    <Progress value={w.mastery} tone={sub.color} showLabel />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </Card>
 
         <Card>
@@ -157,29 +173,39 @@ export default function Dashboard() {
               </Link>
             }
           />
-          <div className="space-y-3">
-            {EXAM_PAPERS.slice(0, 4).map((e) => {
-              const sub = SUBJECTS.find((s) => s.key === e.subject)!
-              return (
-                <div key={e.id} className="flex items-center gap-3 rounded-xl border p-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg text-xs font-semibold" style={{ backgroundColor: `${sub.color}1a`, color: sub.color }}>
-                    {sub.name}
+          {papers.length === 0 ? (
+            <div className="flex flex-col items-center rounded-xl border border-dashed py-10 text-center">
+              <p className="text-sm font-medium text-main">未上传信息，暂无试卷</p>
+              <p className="mt-1 text-xs text-muted">录入试卷后，解析结果会显示在此</p>
+              <Link to="/paper-upload">
+                <Button className="mt-3" size="sm"><FileUp size={14} /> 去录入</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {papers.slice(0, 4).map((e) => {
+                const sub = SUBJECTS.find((s) => s.key === e.subject)!
+                return (
+                  <div key={e.id} className="flex items-center gap-3 rounded-xl border p-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg text-xs font-semibold" style={{ backgroundColor: `${sub.color}1a`, color: sub.color }}>
+                      {sub.name}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-main">{e.name}</p>
+                      <p className="text-xs text-muted">{e.date} · {e.status}</p>
+                    </div>
+                    {e.score > 0 ? (
+                      <span className="text-sm font-semibold text-main">
+                        {e.score}<span className="text-xs text-muted">/{e.total}</span>
+                      </span>
+                    ) : (
+                      <span className="text-xs text-amber-600">解析中</span>
+                    )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-main">{e.name}</p>
-                    <p className="text-xs text-muted">{e.date} · {e.status}</p>
-                  </div>
-                  {e.score > 0 ? (
-                    <span className="text-sm font-semibold text-main">
-                      {e.score}<span className="text-xs text-muted">/{e.total}</span>
-                    </span>
-                  ) : (
-                    <span className="text-xs text-amber-600">解析中</span>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </Card>
       </div>
     </div>

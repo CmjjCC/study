@@ -1,17 +1,22 @@
 import { useState } from 'react'
-import { BookX, RotateCcw, Archive, Filter } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { RotateCcw, Archive, Filter, FileUp, Check } from 'lucide-react'
 import { Card, Button, Badge, WeaknessTypeBadge, Difficulty, SubjectIcon, Empty } from '@/components/ui'
-import { MISTAKES, SUBJECTS } from '@/data/mock'
+import { SUBJECTS } from '@/data/mock'
+import { useApp } from '@/context/AppContext'
+import { useData } from '@/context/DataContext'
 import type { SubjectKey, WeaknessType } from '@/types'
 
 const TYPES: (WeaknessType | '全部')[] = ['全部', '基础漏洞', '题型短板', '解题思路缺陷', '应试易错误区']
 
 export default function MistakeBook() {
+  const { grade } = useApp()
+  const { mistakes, toggleMistakeReviewed } = useData()
   const [subject, setSubject] = useState<SubjectKey | 'all'>('all')
   const [type, setType] = useState<WeaknessType | '全部'>('全部')
   const [onlyUnreviewed, setOnlyUnreviewed] = useState(false)
 
-  const list = MISTAKES.filter((m) => {
+  const list = mistakes.filter((m) => {
     if (subject !== 'all' && m.question.subject !== subject) return false
     if (type !== '全部' && m.type !== type) return false
     if (onlyUnreviewed && m.reviewed) return false
@@ -23,7 +28,7 @@ export default function MistakeBook() {
       <div className="page-head">
         <div>
           <h1 className="page-title">错题本</h1>
-          <p className="page-subtitle">失分题自动收录，按学科 / 类型筛选，支持重做与归档。</p>
+          <p className="page-subtitle">失分题自动收录，按学科 / 类型筛选，支持重做与归档 · 当前年级：{grade}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm"><Archive size={14} /> 归档已掌握</Button>
@@ -58,8 +63,18 @@ export default function MistakeBook() {
         </div>
       </Card>
 
-      {list.length === 0 ? (
-        <Empty title="没有符合条件的错题" desc="调整筛选条件，或录入新试卷产生错题。" />
+      {mistakes.length === 0 ? (
+        <Empty
+          title={`「${grade}」错题本为空`}
+          desc="未上传信息。录入试卷并诊断后，失分题将自动收录到错题本。"
+          action={
+            <Link to="/paper-upload">
+              <Button><FileUp size={16} /> 去录入试卷</Button>
+            </Link>
+          }
+        />
+      ) : list.length === 0 ? (
+        <Empty title="没有符合条件的错题" desc="调整筛选条件查看其他错题。" />
       ) : (
         <div className="space-y-4">
           {list.map((m) => {
@@ -81,7 +96,7 @@ export default function MistakeBook() {
                       <p className="mt-1.5 text-sm leading-relaxed text-main">{m.question.stem}</p>
                     </div>
                   </div>
-                  {m.reviewed && <Badge tone="green">已复习</Badge>}
+                  {m.reviewed && <Badge tone="green"><Check size={12} className="mr-1" /> 已复习</Badge>}
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -104,7 +119,9 @@ export default function MistakeBook() {
                 </div>
 
                 <div className="flex justify-end gap-2 border-t pt-3">
-                  <Button variant="ghost" size="sm"><Archive size={14} /> 归档</Button>
+                  <Button variant="ghost" size="sm" onClick={() => toggleMistakeReviewed(m.id)}>
+                    <Check size={14} /> {m.reviewed ? '取消标记' : '标记已复习'}
+                  </Button>
                   <Button variant="outline" size="sm"><RotateCcw size={14} /> 重做</Button>
                 </div>
               </Card>

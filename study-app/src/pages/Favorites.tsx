@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Star, FileText, Library, ClipboardList } from 'lucide-react'
 import { Card, Badge, Tag, SubjectIcon, Empty } from '@/components/ui'
-import { MATERIALS, QUESTIONS, SUBJECTS } from '@/data/mock'
+import { MATERIALS, QUESTION_BANK, SUBJECTS } from '@/data/mock'
 import type { SubjectKey } from '@/types'
 
 type Tab = '素材' | '模板' | '题目'
@@ -25,7 +25,7 @@ const TPL_FAV: FavRow[] = [
 const FAV: FavRow[] = [
   ...MATERIALS.slice(0, 3).map((m) => ({ id: m.id, title: m.title, excerpt: m.excerpt, subject: m.subject, tags: m.tags, kind: '素材' as Tab })),
   ...TPL_FAV,
-  ...QUESTIONS.slice(0, 2).map((q) => ({ id: q.id, title: q.stem, excerpt: q.analysis, subject: q.subject, tags: q.tags, kind: '题目' as Tab })),
+  ...QUESTION_BANK.slice(0, 2).map((q) => ({ id: q.id, title: q.stem, excerpt: q.analysis, subject: q.subject, tags: q.tags, kind: '题目' as Tab })),
 ]
 
 const ICON = { 素材: Library, 模板: FileText, 题目: ClipboardList }

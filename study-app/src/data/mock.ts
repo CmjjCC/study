@@ -25,8 +25,8 @@ export const SUBJECTS: Subject[] = [
 
 export const GRADES: Grade[] = ['初三', '高一', '高二', '高三']
 
-// ====== 弱点档案（诊断结果）======
-export const WEAKNESSES: Weakness[] = [
+// ====== 诊断生成池：录入试卷后 AI 从中按学科抽取生成弱点（默认不展示）======
+export const DIAGNOSTIC_POOL: Weakness[] = [
   {
     id: 'w1',
     subject: 'math',
@@ -89,8 +89,86 @@ export const WEAKNESSES: Weakness[] = [
   },
 ]
 
-// ====== 试题库 ======
-export const QUESTIONS: Question[] = [
+// ====== 题库（按年级组织，切换年级时训练出题随之过滤）======
+export const QUESTION_BANK: Question[] = [
+  // ----- 初三 -----
+  {
+    id: 'q-c3-m1',
+    subject: 'math',
+    grade: '初三',
+    knowledge: '一元二次方程的解法',
+    type: '选择题',
+    difficulty: 2,
+    stem: '方程 x²-5x+6=0 的两根之和为？',
+    options: ['5', '6', '-5', '-6'],
+    answer: 'A',
+    analysis: '由韦达定理 x₁+x₂=-b/a=5，选 A。',
+    tags: ['一元二次方程', '韦达定理'],
+  },
+  {
+    id: 'q-c3-p1',
+    subject: 'physics',
+    grade: '初三',
+    knowledge: '欧姆定律',
+    type: '计算题',
+    difficulty: 2,
+    stem: '某导体两端电压 6V 时电流 0.3A，求其电阻。',
+    answer: '20Ω',
+    analysis: 'R=U/I=6/0.3=20Ω，直接应用欧姆定律。',
+    tags: ['欧姆定律', '电阻'],
+  },
+  {
+    id: 'q-c3-e1',
+    subject: 'english',
+    grade: '初三',
+    knowledge: '一般现在时',
+    type: '选择题',
+    difficulty: 1,
+    stem: 'He ___ to school every day.',
+    options: ['go', 'goes', 'going', 'went'],
+    answer: 'B',
+    analysis: '主语 He 为第三人称单数，动词加 -es。',
+    tags: ['一般现在时', '单三'],
+  },
+  // ----- 高一 -----
+  {
+    id: 'q-g1-m1',
+    subject: 'math',
+    grade: '高一',
+    knowledge: '集合的基本运算',
+    type: '选择题',
+    difficulty: 2,
+    stem: '设 A={1,2,3}，B={2,3,4}，则 A∩B=',
+    options: ['{1}', '{2,3}', '{1,2,3,4}', '{4}'],
+    answer: 'B',
+    analysis: '交集取公共元素 {2,3}。',
+    tags: ['集合', '交集'],
+  },
+  {
+    id: 'q-g1-p1',
+    subject: 'physics',
+    grade: '高一',
+    knowledge: '匀变速直线运动',
+    type: '计算题',
+    difficulty: 3,
+    stem: '物体由静止做匀加速直线运动，加速度 2m/s²，求 3s 末速度与位移。',
+    answer: 'v=6m/s；s=9m',
+    analysis: 'v=at=6m/s；s=½at²=½×2×9=9m。',
+    tags: ['匀变速', '运动学'],
+  },
+  {
+    id: 'q-g1-c1',
+    subject: 'chinese',
+    grade: '高一',
+    knowledge: '现代文阅读主旨',
+    type: '简答题',
+    difficulty: 3,
+    stem: '简述如何快速把握议论文的中心论点。',
+    answer: '看标题、首段、各段首句与结论段，概括「论点+论据」结构。',
+    analysis: '论点常在首段或结尾，抓总起句与总结句即可定位。',
+    tags: ['现代文', '主旨', '议论文'],
+  },
+  // ----- 高二 -----
   {
     id: 'q1',
     subject: 'math',
@@ -141,86 +219,60 @@ export const QUESTIONS: Question[] = [
     analysis: '前后为转折关系，选 however；therefore/thus 表因果，besides 表递进。',
     tags: ['逻辑衔接', '转折', '完形'],
   },
-]
-
-// ====== 错题本 ======
-export const MISTAKES: Mistake[] = [
+  // ----- 高三 -----
   {
-    id: 'm1',
-    question: QUESTIONS[0],
-    wrongAnswer: 'B',
-    reason: '未验证端点 f(1)=0 时单独成立，导致区间取宽。',
-    type: '应试易错误区',
-    addedAt: '2026-07-05',
-    reviewed: false,
-  },
-  {
-    id: 'm2',
-    question: QUESTIONS[1],
-    wrongAnswer: 'Q=mgh',
-    reason: '漏减最大速度对应的动能，能量守恒未算全。',
-    type: '解题思路缺陷',
-    addedAt: '2026-07-06',
-    reviewed: false,
-  },
-  {
-    id: 'm3',
-    question: QUESTIONS[2],
-    wrongAnswer: '不懂得断句，不理解句读……',
-    reason: '宾语前置未识别，「不」通假未注出。',
-    type: '基础漏洞',
-    addedAt: '2026-07-08',
-    reviewed: true,
-  },
-]
-
-// ====== 试卷列表 ======
-export const EXAM_PAPERS: ExamPaper[] = [
-  {
-    id: 'e1',
-    name: '高二数学期中统测试卷',
+    id: 'q-g3-m1',
     subject: 'math',
-    grade: '高二',
-    date: '2026-05-08',
-    score: 98,
-    total: 150,
-    questionCount: 22,
-    status: '已解析',
+    grade: '高三',
+    knowledge: '导数的综合应用',
+    type: '计算题',
+    difficulty: 5,
+    stem: 'f(x)=x³-3x+1，求单调区间与极值。',
+    answer: '增区间(-∞,-1]∪[1,+∞)，减[-1,1]；极大3，极小-1',
+    analysis: 'f′=3x²-3=3(x²-1)，零点 ±1；列表判断单调性，代入求极值。',
+    tags: ['导数', '单调性', '极值'],
   },
   {
-    id: 'e2',
-    name: '高二物理单元检测（电磁感应）',
+    id: 'q-g3-p1',
     subject: 'physics',
-    grade: '高二',
-    date: '2026-05-20',
-    score: 72,
-    total: 100,
-    questionCount: 16,
-    status: '已解析',
+    grade: '高三',
+    knowledge: '电磁感应综合',
+    type: '计算题',
+    difficulty: 5,
+    stem: '导体棒在磁场中运动并接入含电容的回路，分析棒的运动性质与最终状态。',
+    answer: '棒做加速度减小的加速运动，最终匀速',
+    analysis: '安培力随速度增大而增大，合力减小，加速度减小；当 a=0 时匀速。',
+    tags: ['电磁感应', '电容', '动态分析'],
   },
   {
-    id: 'e3',
-    name: '语文月考试卷',
+    id: 'q-g3-c1',
     subject: 'chinese',
-    grade: '高二',
-    date: '2026-06-12',
-    score: 108,
-    total: 150,
-    questionCount: 20,
-    status: '已解析',
+    grade: '高三',
+    knowledge: '议论文立意与结构',
+    type: '写作题',
+    difficulty: 4,
+    stem: '以「快与慢」为题，列出文章立意与分论点提纲。',
+    answer: '立意：快慢相济方为大道；分论：快的效率/慢的沉淀/快慢结合',
+    analysis: '辩证立意，避免单极；分论点并列递进，首尾呼应。',
+    tags: ['作文', '立意', '结构'],
   },
   {
-    id: 'e4',
-    name: '英语期末模拟卷',
+    id: 'q-g3-e1',
     subject: 'english',
-    grade: '高二',
-    date: '2026-07-10',
-    score: 0,
-    total: 150,
-    questionCount: 25,
-    status: '解析中',
+    grade: '高三',
+    knowledge: '书面表达应用文',
+    type: '写作题',
+    difficulty: 4,
+    stem: '写一封邀请函，邀请外教参加学校英语角活动（约 100 词）。',
+    answer: 'Dear ..., I\'m writing to invite you to ... 时间/地点/活动/期待',
+    analysis: '应用文格式：称呼+目的+细节+期待+落款；时态用一般将来时。',
+    tags: ['应用文', '邀请函', '写作'],
   },
 ]
+
+// 注：试卷(ExamPaper)与错题(Mistake)属用户数据，默认为空，
+// 由 DataContext 在用户录入试卷、AI 诊断后生成并按年级隔离，不在 mock 预置。
+
 
 // ====== 单词记忆 ======
 export const VOCAB: VocabWord[] = [

@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Target, AlertTriangle, Lightbulb, Swords, TrendingDown } from 'lucide-react'
+import { Target, AlertTriangle, Lightbulb, Swords, TrendingDown, FileUp } from 'lucide-react'
 import { Card, Badge, Progress, PriorityBadge, WeaknessTypeBadge, Button, SectionTitle, SubjectIcon, Empty } from '@/components/ui'
-import { WEAKNESSES, SUBJECTS } from '@/data/mock'
+import { SUBJECTS } from '@/data/mock'
 import { useApp } from '@/context/AppContext'
+import { useData } from '@/context/DataContext'
 import type { WeaknessType } from '@/types'
 
 const TYPES: WeaknessType[] = ['基础漏洞', '题型短板', '解题思路缺陷', '应试易错误区']
@@ -15,16 +16,17 @@ const TYPE_TONE: Record<WeaknessType, string> = {
 }
 
 export default function WeaknessReport() {
-  const { activeSubject, setActiveSubject } = useApp()
+  const { activeSubject, setActiveSubject, grade } = useApp()
+  const { weaknesses } = useData()
   const enabled = SUBJECTS.filter((s) => s.enabled)
 
   const filtered = useMemo(() => {
-    const list = activeSubject ? WEAKNESSES.filter((w) => w.subject === activeSubject) : WEAKNESSES
+    const list = activeSubject ? weaknesses.filter((w) => w.subject === activeSubject) : weaknesses
     return [...list].sort((a, b) => {
       const pr = { 高: 0, 中: 1, 低: 2 }
       return pr[a.priority] - pr[b.priority]
     })
-  }, [activeSubject])
+  }, [weaknesses, activeSubject])
 
   const counts = TYPES.map((t) => ({ type: t, count: filtered.filter((w) => w.type === t).length }))
 
@@ -33,7 +35,7 @@ export default function WeaknessReport() {
       <div className="page-head">
         <div>
           <h1 className="page-title">弱点分析报告</h1>
-          <p className="page-subtitle">AI 按四类问题精准归因，标注学习优先级，给出可落地提升方案。</p>
+          <p className="page-subtitle">AI 按四类问题精准归因，标注学习优先级，给出可落地提升方案 · 当前年级：{grade}</p>
         </div>
         <Link to="/training">
           <Button><Swords size={16} /> 靶向训练</Button>
@@ -77,7 +79,15 @@ export default function WeaknessReport() {
 
       {/* 弱点列表 */}
       {filtered.length === 0 ? (
-        <Empty title="暂无弱点" desc="录入试卷后，AI 将自动诊断并生成弱点档案。" />
+        <Empty
+          title={`「${grade}」暂无弱点诊断`}
+          desc="未上传信息。录入试卷后，AI 将自动诊断薄弱点并生成专属弱点档案。"
+          action={
+            <Link to="/paper-upload">
+              <Button><FileUp size={16} /> 去录入试卷</Button>
+            </Link>
+          }
+        />
       ) : (
         <div className="space-y-4">
           {filtered.map((w) => {
@@ -97,6 +107,7 @@ export default function WeaknessReport() {
                       <div className="mt-1.5 flex flex-wrap items-center gap-2">
                         <Badge tone="gray">{sub.name}</Badge>
                         <WeaknessTypeBadge type={w.type} />
+                        {w.sourcePaper && <Badge tone="green">来源：{w.sourcePaper}</Badge>}
                       </div>
                     </div>
                   </div>

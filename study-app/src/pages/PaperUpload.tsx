@@ -1,8 +1,11 @@
 import { useState } from 'react'
-import { ImageUp, ClipboardList, Edit3, Sparkles, CheckCircle2, Loader2, FileText, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ImageUp, ClipboardList, Edit3, Sparkles, CheckCircle2, Loader2, FileText } from 'lucide-react'
 import { Card, Button, Badge, SectionTitle, SubjectIcon } from '@/components/ui'
-import { SUBJECTS, EXAM_PAPERS } from '@/data/mock'
-import type { SubjectKey } from '@/types'
+import { SUBJECTS, DIAGNOSTIC_POOL } from '@/data/mock'
+import { useData } from '@/context/DataContext'
+import { useApp } from '@/context/AppContext'
+import type { SubjectKey, ExamPaper, WeaknessType } from '@/types'
 
 type Mode = 'image' | 'paste' | 'score'
 type Stage = 'idle' | 'parsing' | 'done'
@@ -13,16 +16,46 @@ const MODES: { key: Mode; label: string; icon: typeof ImageUp; desc: string }[] 
   { key: 'score', label: '录入得分情况', icon: Edit3, desc: '按题录入得分与失分原因' },
 ]
 
+const TYPES: WeaknessType[] = ['基础漏洞', '题型短板', '解题思路缺陷', '应试易错误区']
+
 export default function PaperUpload() {
+  const navigate = useNavigate()
+  const { addDiagnosis, papers } = useData()
+  const { grade } = useApp()
   const [mode, setMode] = useState<Mode>('image')
   const [stage, setStage] = useState<Stage>('idle')
   const [subject, setSubject] = useState<SubjectKey>('math')
+  const [paper, setPaper] = useState<ExamPaper | null>(null)
 
   const startParse = () => {
+    const sub = SUBJECTS.find((s) => s.key === subject)!
+    const p: ExamPaper = {
+      id: `p-${Date.now()}`,
+      name: `${grade}${sub.name}${mode === 'image' ? '试卷图片' : mode === 'paste' ? '错题文本' : '得分录入'}诊断`,
+      subject,
+      grade,
+      date: new Date().toISOString().slice(0, 10),
+      score: 0,
+      total: 100,
+      questionCount: 20,
+      status: '已解析',
+    }
+    setPaper(p)
     setStage('parsing')
-    setTimeout(() => setStage('done'), 1600)
+    setTimeout(() => {
+      setStage('done')
+      addDiagnosis(p, subject)
+    }, 1600)
   }
-  const reset = () => setStage('idle')
+
+  const reset = () => {
+    setStage('idle')
+    setPaper(null)
+  }
+
+  const subName = SUBJECTS.find((s) => s.key === subject)!.name
+  const generated = paper ? DIAGNOSTIC_POOL.filter((w) => w.subject === subject) : []
+  const typeCounts = TYPES.map((t) => ({ t, n: generated.filter((w) => w.type === t).length })).filter((x) => x.n > 0)
 
   return (
     <div className="space-y-6">
@@ -79,7 +112,10 @@ export default function PaperUpload() {
             {SUBJECTS.filter((s) => s.enabled).map((s) => (
               <button
                 key={s.key}
-                onClick={() => setSubject(s.key)}
+                onClick={() => {
+                  setSubject(s.key)
+                  reset()
+                }}
                 className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition ${
                   subject === s.key ? 'border-brand-500 bg-brand-50 text-brand-700' : 'text-sub hover:bg-black/[0.04]'
                 }`}
@@ -146,21 +182,22 @@ export default function PaperUpload() {
               </div>
             )}
 
-            {stage === 'done' && (
+            {stage === 'done' && paper && (
               <div className="flex flex-col items-center justify-center py-10 text-center">
                 <CheckCircle2 size={36} className="text-brand-500" />
-                <p className="mt-3 text-sm font-semibold text-main">解析完成，识别 22 道题</p>
+                <p className="mt-3 text-sm font-semibold text-main">
+                  {subName} 试卷解析完成 · 已写入「{grade}」年级档案
+                </p>
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
-                  <Badge tone="green">基础漏洞 ×2</Badge>
-                  <Badge tone="amber">题型短板 ×1</Badge>
-                  <Badge tone="purple">思路缺陷 ×1</Badge>
-                  <Badge tone="blue">易错误区 ×1</Badge>
+                  {typeCounts.map((c) => (
+                    <Badge key={c.t} tone="amber">{c.t} ×{c.n}</Badge>
+                  ))}
                 </div>
                 <div className="mt-5 flex gap-3">
                   <Button variant="outline" onClick={reset}>
                     重新录入
                   </Button>
-                  <Button onClick={() => (window.location.hash = '#/weakness')}>
+                  <Button onClick={() => navigate('/weakness')}>
                     查看弱点报告 →
                   </Button>
                 </div>
@@ -169,7 +206,7 @@ export default function PaperUpload() {
           </Card>
         </div>
 
-        {/* 右：使用说明 + 已录入试卷 */}
+        {/* 右：使用说明 + 已录入试卷（来自当前年级）*/}
         <div className="space-y-5">
           <Card>
             <SectionTitle title="录入指引" />
@@ -178,7 +215,7 @@ export default function PaperUpload() {
                 '图片越清晰，OCR 识别越准；建议扫描件或正拍高清照。',
                 '粘贴文本时按「题号. 题干」分行，便于 AI 切分。',
                 '录入得分可只填失分题，正确题留空即可。',
-                '解析完成后自动生成弱点档案并推荐靶向训练。',
+                '解析完成后自动生成该年级弱点档案并推荐靶向训练。',
               ].map((t, i) => (
                 <li key={i} className="flex gap-2">
                   <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400" />
@@ -189,26 +226,30 @@ export default function PaperUpload() {
           </Card>
 
           <Card>
-            <SectionTitle title="已录入试卷" />
-            <div className="space-y-2">
-              {EXAM_PAPERS.map((e) => {
-                const sub = SUBJECTS.find((s) => s.key === e.subject)!
-                return (
-                  <div key={e.id} className="flex items-center gap-3 rounded-lg border p-2.5">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: `${sub.color}1a`, color: sub.color }}>
-                      <FileText size={15} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-medium text-main">{e.name}</p>
-                      <p className="text-[11px] text-muted">{e.date} · {e.questionCount} 题</p>
+            <SectionTitle title={`已录入试卷（${grade}）`} subtitle="切换年级查看对应档案" />
+            {papers.length === 0 ? (
+              <p className="rounded-lg border border-dashed py-8 text-center text-xs text-muted">
+                未上传信息，暂无试卷
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {papers.map((e) => {
+                  const sub = SUBJECTS.find((s) => s.key === e.subject)!
+                  return (
+                    <div key={e.id} className="flex items-center gap-3 rounded-lg border p-2.5">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: `${sub.color}1a`, color: sub.color }}>
+                        <FileText size={15} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-main">{e.name}</p>
+                        <p className="text-[11px] text-muted">{e.date} · {e.questionCount} 题</p>
+                      </div>
+                      <Badge tone="green">{e.status}</Badge>
                     </div>
-                    <Badge tone={e.status === '已解析' ? 'green' : e.status === '解析中' ? 'amber' : 'gray'}>
-                      {e.status}
-                    </Badge>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+            )}
           </Card>
         </div>
       </div>

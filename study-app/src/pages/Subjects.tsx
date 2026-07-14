@@ -2,11 +2,13 @@ import { Link } from 'react-router-dom'
 import { Lock, ArrowRight } from 'lucide-react'
 import { Card, Progress, Badge, SectionTitle } from '@/components/ui'
 import { SubjectIcon } from '@/components/ui'
-import { SUBJECTS, WEAKNESSES, EXAM_PAPERS } from '@/data/mock'
+import { SUBJECTS } from '@/data/mock'
 import { useApp } from '@/context/AppContext'
+import { useData } from '@/context/DataContext'
 
 export default function Subjects() {
-  const { setActiveSubject } = useApp()
+  const { setActiveSubject, grade } = useApp()
+  const { weaknesses, papers } = useData()
   const enabled = SUBJECTS.filter((s) => s.enabled)
   const disabled = SUBJECTS.filter((s) => !s.enabled)
 
@@ -24,8 +26,8 @@ export default function Subjects() {
         <SectionTitle title="已上线学科" subtitle="语数英物 · 点击进入学科训练" />
         <div className="grid-cards">
           {enabled.map((s) => {
-            const wCount = WEAKNESSES.filter((w) => w.subject === s.key).length
-            const exams = EXAM_PAPERS.filter((e) => e.subject === s.key).length
+            const wCount = weaknesses.filter((w) => w.subject === s.key).length
+            const exams = papers.filter((e) => e.subject === s.key).length
             return (
               <Link
                 key={s.key}

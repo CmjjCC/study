@@ -1,18 +1,42 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Swords, CheckCircle2, XCircle, Lightbulb, RotateCcw, Target, ChevronRight } from 'lucide-react'
-import { Card, Button, Badge, Difficulty, SectionTitle, SubjectIcon } from '@/components/ui'
-import { QUESTIONS, WEAKNESSES, SUBJECTS } from '@/data/mock'
+import { Card, Button, Badge, Difficulty, SectionTitle, SubjectIcon, Empty } from '@/components/ui'
+import { QUESTION_BANK, SUBJECTS } from '@/data/mock'
+import { useApp } from '@/context/AppContext'
+import { useData } from '@/context/DataContext'
 import type { Question } from '@/types'
 
 export default function Training() {
-  const queue = QUESTIONS
+  const { grade } = useApp()
+  const { weaknesses } = useData()
+  const queue = QUESTION_BANK.filter((q) => q.grade === grade)
   const [idx, setIdx] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
 
-  const q: Question = queue[idx]
+  useEffect(() => {
+    setIdx(0)
+    setPicked(null)
+    setSubmitted(false)
+  }, [grade])
+
+  if (queue.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="page-head">
+          <div>
+            <h1 className="page-title">靶向出题训练</h1>
+            <p className="page-subtitle">AI 根据专属薄弱点生成同考点 / 同难度 / 同题型变式题，专项突破 · 当前年级：{grade}</p>
+          </div>
+        </div>
+        <Empty title={`「${grade}」题库建设中`} desc="该年级暂无题目，可切换其他年级，或先录入试卷生成弱点后靶向出题。" />
+      </div>
+    )
+  }
+
+  const q: Question = queue[idx % queue.length]
   const sub = SUBJECTS.find((s) => s.key === q.subject)!
-  const weakness = WEAKNESSES.find((w) => w.subject === q.subject && w.knowledge === q.knowledge)
+  const weakness = weaknesses.find((w) => w.subject === q.subject && w.knowledge === q.knowledge)
   const correct = picked === q.answer
 
   const submit = () => picked && setSubmitted(true)
@@ -31,7 +55,7 @@ export default function Training() {
       <div className="page-head">
         <div>
           <h1 className="page-title">靶向出题训练</h1>
-          <p className="page-subtitle">AI 根据专属薄弱点生成同考点 / 同难度 / 同题型变式题，专项突破。</p>
+          <p className="page-subtitle">AI 根据专属薄弱点生成同考点 / 同难度 / 同题型变式题，专项突破 · 当前年级：{grade}</p>
         </div>
       </div>
 

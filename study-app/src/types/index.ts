@@ -35,6 +35,7 @@ export interface Weakness {
   mastery: number // 掌握度
   loseRate: number // 失分率
   suggestion: string // 提升方案
+  sourcePaper?: string // 来源试卷（诊断生成时关联）
 }
 
 export interface Question {
