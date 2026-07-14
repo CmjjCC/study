@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ====== 设计 Token：统一间距/圆角/层级，保证页面整齐 ====== */
+@layer base {
+  :root {
+    --page-bg: #f6f8f5;
+    --card-bg: #ffffff;
+    --text-main: #1f2a24;
+    --text-sub: #5b6b62;
+    --text-muted: #94a39b;
+    --border: #eef1ec;
+    --border-strong: #e2e7df;
+  }
+
+  /* 护眼模式：暖米色背景，降低对比度 */
+  .eye-care {
+    --page-bg: #f4f1e8;
+    --card-bg: #fbf9f2;
+    --text-main: #2b2f24;
+    --text-sub: #6a6b5a;
+    --text-muted: #a09f8c;
+    --border: #ebe7d8;
+    --border-strong: #ddd8c4;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--page-bg);
+    color: var(--text-main);
+    font-feature-settings: 'cv11', 'ss01';
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  /* 滚动条统一 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+  }
+}
+
+/* ====== 组件层：可复用样式类，统一间距 ====== */
+@layer components {
+  /* 页面容器：统一外边距与最大宽度 */
+  .page {
+    @apply mx-auto w-full max-w-[1280px] px-6 py-6 lg:px-8;
+  }
+
+  /* 页面标题区 */
+  .page-head {
+    @apply mb-6 flex items-end justify-between gap-4;
+  }
+  .page-title {
+    @apply text-2xl font-bold tracking-tight;
+    color: var(--text-main);
+  }
+  .page-subtitle {
+    @apply mt-1 text-sm;
+    color: var(--text-sub);
+  }
+
+  /* 卡片：统一圆角/阴影/内边距，是「整齐」的核心单元 */
+  .card {
+    background-color: var(--card-bg);
+    @apply rounded-2xl border p-6 shadow-card;
+    border-color: var(--border);
+  }
+  .card-hover {
+    @apply transition-shadow duration-200 hover:shadow-card-hover;
+  }
+  .card-pad-sm {
+    @apply p-4;
+  }
+  .card-pad-lg {
+    @apply p-8;
+  }
+
+  /* 区块标题 */
+  .section-title {
+    @apply mb-4 text-base font-semibold;
+    color: var(--text-main);
+  }
+
+  /* 栅格工具：统一 gap */
+  .grid-cards {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3;
+  }
+  .grid-cards-4 {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4;
+  }
+
+  /* 输入控件统一 */
+  .input-base {
+    @apply w-full rounded-xl border bg-transparent px-3.5 py-2.5 text-sm outline-none transition;
+    border-color: var(--border-strong);
+  }
+  .input-base:focus {
+    @apply border-brand-500 ring-2 ring-brand-100;
+  }
+
+  /* 文字层级 */
+  .text-main {
+    color: var(--text-main);
+  }
+  .text-sub {
+    color: var(--text-sub);
+  }
+  .text-muted {
+    color: var(--text-muted);
+  }
+}
+
+/* 路由切换淡入 */
+.fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
