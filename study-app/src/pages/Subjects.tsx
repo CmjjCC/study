@@ -8,7 +8,7 @@ import { useData } from '@/context/DataContext'
 
 export default function Subjects() {
   const { setActiveSubject, grade } = useApp()
-  const { weaknesses, papers } = useData()
+  const { weaknesses, papers, subjectMastery } = useData()
   const enabled = SUBJECTS.filter((s) => s.enabled)
   const disabled = SUBJECTS.filter((s) => !s.enabled)
 
@@ -54,9 +54,11 @@ export default function Subjects() {
                   <div className="mt-4">
                     <div className="mb-1.5 flex items-center justify-between text-xs">
                       <span className="text-sub">综合掌握度</span>
-                      <span className="font-semibold text-main">{s.mastery}%</span>
+                      <span className="font-semibold text-main">
+                        {subjectMastery(s.key) === null ? '暂无数据' : `${subjectMastery(s.key)}%`}
+                      </span>
                     </div>
-                    <Progress value={s.mastery} tone={s.color} />
+                    <Progress value={subjectMastery(s.key) ?? 0} tone={s.color} />
                   </div>
                 </Card>
               </Link>

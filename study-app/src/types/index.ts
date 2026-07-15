@@ -16,10 +16,10 @@ export type SubjectKey =
 export interface Subject {
   key: SubjectKey
   name: string
-  color: string // tailwind 色板名或 hex
+  color: string // hex
   icon: string // lucide 图标名
   enabled: boolean // 是否已上线该学科
-  mastery: number // 掌握度 0-100
+  // 掌握度不再为固定值，运行时由 DataContext 依据弱点档案计算
 }
 
 export type WeaknessType = '基础漏洞' | '题型短板' | '解题思路缺陷' | '应试易错误区'
@@ -32,7 +32,7 @@ export interface Weakness {
   knowledge: string // 知识点
   type: WeaknessType
   priority: Priority
-  mastery: number // 掌握度
+  mastery: number // 掌握度 0-100
   loseRate: number // 失分率
   suggestion: string // 提升方案
   sourcePaper?: string // 来源试卷（诊断生成时关联）
@@ -76,12 +76,18 @@ export interface ExamPaper {
 
 export interface VocabWord {
   id: string
+  bookId: string
   word: string
   phonetic: string
   meaning: string
   example: string
-  stage: '新词' | '学习中' | '复习中' | '已掌握'
-  nextReview: string
+}
+
+export interface VocabBook {
+  id: string
+  name: string
+  desc: string
+  words: VocabWord[]
 }
 
 export interface Material {
@@ -91,6 +97,25 @@ export interface Material {
   excerpt: string
   tags: string[]
   subject: SubjectKey
+  grade: Grade
+}
+
+export interface Template {
+  id: string
+  title: string
+  subject: SubjectKey
+  category: string
+  use: string
+  body: string
+  tags: string[]
+  grade: Grade
+}
+
+export interface StudyLog {
+  date: string // YYYY-MM-DD
+  minutes: number
+  questions: number
+  correct: number
 }
 
 export interface StudyStat {
@@ -98,4 +123,16 @@ export interface StudyStat {
   minutes: number
   questions: number
   accuracy: number
+}
+
+export type FavoriteKind = '素材' | '模板' | '题目'
+
+export interface FavoriteItem {
+  id: string
+  kind: FavoriteKind
+  refId: string
+  title: string
+  excerpt: string
+  subject: SubjectKey
+  tags: string[]
 }

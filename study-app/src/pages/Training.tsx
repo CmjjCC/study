@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
-import { Swords, CheckCircle2, XCircle, Lightbulb, RotateCcw, Target, ChevronRight } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { Swords, CheckCircle2, XCircle, Lightbulb, RotateCcw, Target, ChevronRight, FileUp } from 'lucide-react'
 import { Card, Button, Badge, Difficulty, SectionTitle, SubjectIcon, Empty } from '@/components/ui'
 import { QUESTION_BANK, SUBJECTS } from '@/data/mock'
 import { useApp } from '@/context/AppContext'
@@ -8,8 +9,19 @@ import type { Question } from '@/types'
 
 export default function Training() {
   const { grade } = useApp()
-  const { weaknesses } = useData()
-  const queue = QUESTION_BANK.filter((q) => q.grade === grade)
+  const { weaknesses, addStudyLog } = useData()
+
+  // 靶向出题：必须录入试卷产生弱点后才出题，按弱点的学科/知识点匹配当前年级题库
+  const queue = useMemo<Question[]>(() => {
+    const targeted = weaknesses.flatMap((w) => {
+      const subjectQs = QUESTION_BANK.filter((q) => q.subject === w.subject && q.grade === grade)
+      const byKnowledge = subjectQs.filter((q) => q.knowledge === w.knowledge)
+      const pool = byKnowledge.length ? byKnowledge : subjectQs
+      return pool.slice(0, 1)
+    })
+    return [...new Map(targeted.map((q) => [q.id, q] as [string, Question])).values()]
+  }, [weaknesses, grade])
+
   const [idx, setIdx] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
@@ -20,16 +32,37 @@ export default function Training() {
     setSubmitted(false)
   }, [grade])
 
+  const head = (
+    <div className="page-head">
+      <div>
+        <h1 className="page-title">靶向出题训练</h1>
+        <p className="page-subtitle">根据录入试卷的年级与薄弱点难度智能出题 · 当前年级：{grade}</p>
+      </div>
+    </div>
+  )
+
+  if (weaknesses.length === 0) {
+    return (
+      <div className="space-y-6">
+        {head}
+        <Empty
+          title="暂无薄弱点，无法靶向出题"
+          desc="靶向出题需基于录入试卷的诊断结果。请先录入试卷，AI 将依据薄弱点智能出题。"
+          action={
+            <Link to="/paper-upload">
+              <Button><FileUp size={16} /> 去录入试卷</Button>
+            </Link>
+          }
+        />
+      </div>
+    )
+  }
+
   if (queue.length === 0) {
     return (
       <div className="space-y-6">
-        <div className="page-head">
-          <div>
-            <h1 className="page-title">靶向出题训练</h1>
-            <p className="page-subtitle">AI 根据专属薄弱点生成同考点 / 同难度 / 同题型变式题，专项突破 · 当前年级：{grade}</p>
-          </div>
-        </div>
-        <Empty title={`「${grade}」题库建设中`} desc="该年级暂无题目，可切换其他年级，或先录入试卷生成弱点后靶向出题。" />
+        {head}
+        <Empty title={`「${grade}」暂无匹配靶向题`} desc="已诊断薄弱点，但该年级题库暂无对应题目。可切换年级或录入其他学科试卷。" />
       </div>
     )
   }
@@ -39,7 +72,16 @@ export default function Training() {
   const weakness = weaknesses.find((w) => w.subject === q.subject && w.knowledge === q.knowledge)
   const correct = picked === q.answer
 
-  const submit = () => picked && setSubmitted(true)
+  const submit = () => {
+    if (!picked) return
+    setSubmitted(true)
+    addStudyLog({
+      date: new Date().toISOString().slice(0, 10),
+      minutes: 3,
+      questions: 1,
+      correct: picked === q.answer ? 1 : 0,
+    })
+  }
   const next = () => {
     setIdx((i) => (i + 1) % queue.length)
     setPicked(null)
@@ -52,13 +94,7 @@ export default function Training() {
 
   return (
     <div className="space-y-6">
-      <div className="page-head">
-        <div>
-          <h1 className="page-title">靶向出题训练</h1>
-          <p className="page-subtitle">AI 根据专属薄弱点生成同考点 / 同难度 / 同题型变式题，专项突破 · 当前年级：{grade}</p>
-        </div>
-      </div>
-
+      {head}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
         {/* 左：题目主体 */}
         <div className="lg:col-span-3 space-y-5">
@@ -182,15 +218,12 @@ export default function Training() {
         {/* 右：题序导航 + 训练说明 */}
         <div className="space-y-5">
           <Card>
-            <SectionTitle title="本次训练" subtitle={`共 ${queue.length} 题 · 变式题`} />
+            <SectionTitle title="本次训练" subtitle={`共 ${queue.length} 题 · 靶向变式题`} />
             <div className="grid grid-cols-5 gap-2">
-              {queue.map((_, i) => (
+              {queue.map((qq, i) => (
                 <button
-                  key={i}
-                  onClick={() => {
-                    setIdx(i)
-                    retry()
-                  }}
+                  key={qq.id}
+                  onClick={() => { setIdx(i); retry() }}
                   className={`flex h-9 items-center justify-center rounded-lg text-sm font-medium transition ${
                     i === idx ? 'bg-brand-500 text-white' : 'bg-gray-50 text-sub hover:bg-gray-100'
                   }`}
@@ -224,7 +257,7 @@ export default function Training() {
           <Card>
             <SectionTitle title="训练说明" />
             <p className="text-xs leading-relaxed text-sub">
-              提交后系统自动批改并写入弱点档案，掌握度达标则该薄弱点降级；持续未掌握则难度回调，适配个人节奏。
+              题目依据已录入试卷的薄弱点生成，提交后自动批改并记入学习记录，掌握度达标则弱点降级；持续未掌握则难度回调。
             </p>
           </Card>
         </div>

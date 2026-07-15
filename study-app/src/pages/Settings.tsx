@@ -1,10 +1,12 @@
 import { Moon, Sun, User, GraduationCap, BookOpen, Shield, Info } from 'lucide-react'
 import { Card, Button, Badge, SectionTitle, SubjectIcon } from '@/components/ui'
 import { useApp } from '@/context/AppContext'
+import { useData } from '@/context/DataContext'
 import { GRADES, SUBJECTS } from '@/data/mock'
 
 export default function SettingsPage() {
   const { grade, setGrade, eyeCare, setEyeCare } = useApp()
+  const { subjectMastery } = useData()
 
   return (
     <div className="space-y-6">
@@ -93,7 +95,7 @@ export default function SettingsPage() {
                 <Badge tone={s.enabled ? 'green' : 'gray'}>{s.enabled ? '已上线' : '待开放'}</Badge>
               </div>
               <p className="mt-2.5 text-sm font-medium text-main">{s.name}</p>
-              <p className="text-xs text-muted">{s.enabled ? `掌握度 ${s.mastery}%` : '接口已预留'}</p>
+              <p className="text-xs text-muted">{s.enabled ? (subjectMastery(s.key) === null ? '暂无数据' : `掌握度 ${subjectMastery(s.key)}%`) : '接口已预留'}</p>
             </div>
           ))}
         </div>

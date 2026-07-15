@@ -2,25 +2,23 @@ import type {
   Subject,
   Weakness,
   Question,
-  Mistake,
-  ExamPaper,
-  VocabWord,
+  VocabBook,
   Material,
-  StudyStat,
+  Template,
   Grade,
 } from '@/types'
 
 // ====== 学科配置（含扩展学科接口预留）======
 export const SUBJECTS: Subject[] = [
-  { key: 'chinese', name: '语文', color: '#ef6c5a', icon: 'BookOpen', enabled: true, mastery: 72 },
-  { key: 'math', name: '数学', color: '#3b82f6', icon: 'Sigma', enabled: true, mastery: 64 },
-  { key: 'english', name: '英语', color: '#a855f7', icon: 'Languages', enabled: true, mastery: 80 },
-  { key: 'physics', name: '物理', color: '#f59e0b', icon: 'Atom', enabled: true, mastery: 58 },
-  { key: 'chemistry', name: '化学', color: '#10b981', icon: 'FlaskConical', enabled: false, mastery: 0 },
-  { key: 'biology', name: '生物', color: '#84cc16', icon: 'Leaf', enabled: false, mastery: 0 },
-  { key: 'history', name: '历史', color: '#b45309', icon: 'Scroll', enabled: false, mastery: 0 },
-  { key: 'geography', name: '地理', color: '#0ea5e9', icon: 'Globe2', enabled: false, mastery: 0 },
-  { key: 'politics', name: '政治', color: '#ec4899', icon: 'Scale', enabled: false, mastery: 0 },
+  { key: 'chinese', name: '语文', color: '#ef6c5a', icon: 'BookOpen', enabled: true },
+  { key: 'math', name: '数学', color: '#3b82f6', icon: 'Sigma', enabled: true },
+  { key: 'english', name: '英语', color: '#a855f7', icon: 'Languages', enabled: true },
+  { key: 'physics', name: '物理', color: '#f59e0b', icon: 'Atom', enabled: true },
+  { key: 'chemistry', name: '化学', color: '#10b981', icon: 'FlaskConical', enabled: false },
+  { key: 'biology', name: '生物', color: '#84cc16', icon: 'Leaf', enabled: false },
+  { key: 'history', name: '历史', color: '#b45309', icon: 'Scroll', enabled: false },
+  { key: 'geography', name: '地理', color: '#0ea5e9', icon: 'Globe2', enabled: false },
+  { key: 'politics', name: '政治', color: '#ec4899', icon: 'Scale', enabled: false },
 ]
 
 export const GRADES: Grade[] = ['初三', '高一', '高二', '高三']
@@ -79,6 +77,16 @@ export const DIAGNOSTIC_POOL: Weakness[] = [
   },
   {
     id: 'w6',
+    subject: 'chinese',
+    knowledge: '议论文立意与论证',
+    type: '解题思路缺陷',
+    priority: '中',
+    mastery: 52,
+    loseRate: 48,
+    suggestion: '立意辩证不走极端，分论点并列递进，论据贴合论点。',
+  },
+  {
+    id: 'w7',
     subject: 'english',
     knowledge: '完形填空逻辑衔接',
     type: '解题思路缺陷',
@@ -86,6 +94,16 @@ export const DIAGNOSTIC_POOL: Weakness[] = [
     mastery: 66,
     loseRate: 34,
     suggestion: '先通读定主旨，关注 however/besides 等逻辑信号词。',
+  },
+  {
+    id: 'w8',
+    subject: 'english',
+    knowledge: '书面表达应用文',
+    type: '题型短板',
+    priority: '中',
+    mastery: 50,
+    loseRate: 50,
+    suggestion: '记牢书信/通知/邀请函格式，时态与语气贴合场景。',
   },
 ]
 
@@ -130,6 +148,18 @@ export const QUESTION_BANK: Question[] = [
     analysis: '主语 He 为第三人称单数，动词加 -es。',
     tags: ['一般现在时', '单三'],
   },
+  {
+    id: 'q-c3-c1',
+    subject: 'chinese',
+    grade: '初三',
+    knowledge: '文言文翻译特殊句式',
+    type: '翻译题',
+    difficulty: 2,
+    stem: '将「何陋之有」译为现代汉语。',
+    answer: '有什么简陋的呢？',
+    analysis: '宾语前置句，「之」为标志，正常语序为「有何陋」。',
+    tags: ['宾语前置', '文言文'],
+  },
   // ----- 高一 -----
   {
     id: 'q-g1-m1',
@@ -167,6 +197,19 @@ export const QUESTION_BANK: Question[] = [
     answer: '看标题、首段、各段首句与结论段，概括「论点+论据」结构。',
     analysis: '论点常在首段或结尾，抓总起句与总结句即可定位。',
     tags: ['现代文', '主旨', '议论文'],
+  },
+  {
+    id: 'q-g1-e1',
+    subject: 'english',
+    grade: '高一',
+    knowledge: '定语从句',
+    type: '选择题',
+    difficulty: 3,
+    stem: 'The book ___ I bought yesterday is interesting.',
+    options: ['that', 'what', 'who', 'where'],
+    answer: 'A',
+    analysis: '先行词为物，关系代词用 that/which，选 A。',
+    tags: ['定语从句', '关系代词'],
   },
   // ----- 高二 -----
   {
@@ -248,7 +291,7 @@ export const QUESTION_BANK: Question[] = [
     id: 'q-g3-c1',
     subject: 'chinese',
     grade: '高三',
-    knowledge: '议论文立意与结构',
+    knowledge: '议论文立意与论证',
     type: '写作题',
     difficulty: 4,
     stem: '以「快与慢」为题，列出文章立意与分论点提纲。',
@@ -270,48 +313,96 @@ export const QUESTION_BANK: Question[] = [
   },
 ]
 
-// 注：试卷(ExamPaper)与错题(Mistake)属用户数据，默认为空，
-// 由 DataContext 在用户录入试卷、AI 诊断后生成并按年级隔离，不在 mock 预置。
-
-
-// ====== 单词记忆 ======
-export const VOCAB: VocabWord[] = [
-  { id: 'v1', word: 'abandon', phonetic: '/əˈbændən/', meaning: 'v. 放弃；遗弃', example: 'Never abandon your dreams.', stage: '复习中', nextReview: '今日' },
-  { id: 'v2', word: 'comprehensive', phonetic: '/ˌkɒmprɪˈhensɪv/', meaning: 'adj. 全面的；综合的', example: 'a comprehensive review', stage: '学习中', nextReview: '今日' },
-  { id: 'v3', word: 'inevitable', phonetic: '/ɪnˈevɪtəbl/', meaning: 'adj. 不可避免的', example: 'an inevitable result', stage: '新词', nextReview: '明日' },
-  { id: 'v4', word: 'fluctuate', phonetic: '/ˈflʌktʃueɪt/', meaning: 'v. 波动；起伏', example: 'Prices fluctuate daily.', stage: '已掌握', nextReview: '本周' },
-  { id: 'v5', word: 'substantial', phonetic: '/səbˈstænʃl/', meaning: 'adj. 大量的；实质的', example: 'substantial evidence', stage: '复习中', nextReview: '今日' },
-  { id: 'v6', word: 'articulate', phonetic: '/ɑːˈtɪkjuleɪt/', meaning: 'v. 清楚地表达', example: 'She articulated her ideas well.', stage: '新词', nextReview: '明日' },
+// ====== 单词书（多本，选择后学习；词条为系统内置内容）======
+export const VOCAB_BOOKS: VocabBook[] = [
+  {
+    id: 'cz',
+    name: '中考考纲词汇',
+    desc: '初中核心 1600 词精选',
+    words: [
+      { id: 'cz-1', bookId: 'cz', word: 'abandon', phonetic: '/əˈbændən/', meaning: 'v. 放弃；遗弃', example: 'Never abandon your dreams.' },
+      { id: 'cz-2', bookId: 'cz', word: 'achieve', phonetic: '/əˈtʃiːv/', meaning: 'v. 实现；达到', example: 'achieve one\'s goal' },
+      { id: 'cz-3', bookId: 'cz', word: 'balanced', phonetic: '/ˈbælənst/', meaning: 'adj. 平衡的', example: 'a balanced diet' },
+      { id: 'cz-4', bookId: 'cz', word: 'create', phonetic: '/kriˈeɪt/', meaning: 'v. 创造', example: 'create value' },
+    ],
+  },
+  {
+    id: 'gk3500',
+    name: '高考 3500 词',
+    desc: '高中考纲核心词汇',
+    words: [
+      { id: 'gk-1', bookId: 'gk3500', word: 'comprehensive', phonetic: '/ˌkɒmprɪˈhensɪv/', meaning: 'adj. 全面的；综合的', example: 'a comprehensive review' },
+      { id: 'gk-2', bookId: 'gk3500', word: 'inevitable', phonetic: '/ɪnˈevɪtəbl/', meaning: 'adj. 不可避免的', example: 'an inevitable result' },
+      { id: 'gk-3', bookId: 'gk3500', word: 'fluctuate', phonetic: '/ˈflʌktʃueɪt/', meaning: 'v. 波动；起伏', example: 'Prices fluctuate daily.' },
+      { id: 'gk-4', bookId: 'gk3500', word: 'substantial', phonetic: '/səbˈstænʃl/', meaning: 'adj. 大量的；实质的', example: 'substantial evidence' },
+      { id: 'gk-5', bookId: 'gk3500', word: 'articulate', phonetic: '/ɑːˈtɪkjuleɪt/', meaning: 'v. 清楚地表达', example: 'She articulated her ideas well.' },
+    ],
+  },
+  {
+    id: 'cet4',
+    name: '四级核心词',
+    desc: '大学英语四级高频',
+    words: [
+      { id: 'c4-1', bookId: 'cet4', word: 'emphasis', phonetic: '/ˈemfəsɪs/', meaning: 'n. 强调', example: 'put emphasis on' },
+      { id: 'c4-2', bookId: 'cet4', word: 'evaluate', phonetic: '/ɪˈvæljueɪt/', meaning: 'v. 评估', example: 'evaluate the result' },
+      { id: 'c4-3', bookId: 'cet4', word: 'perspective', phonetic: '/pəˈspektɪv/', meaning: 'n. 视角；观点', example: 'from a new perspective' },
+      { id: 'c4-4', bookId: 'cet4', word: 'implement', phonetic: '/ˈɪmplɪment/', meaning: 'v. 实施；贯彻', example: 'implement a plan' },
+    ],
+  },
+  {
+    id: 'phrase',
+    name: '高频短语',
+    desc: '写作常用地道搭配',
+    words: [
+      { id: 'ph-1', bookId: 'phrase', word: 'in terms of', phonetic: '', meaning: '就……而言', example: 'in terms of cost' },
+      { id: 'ph-2', bookId: 'phrase', word: 'account for', phonetic: '', meaning: '解释；占（比例）', example: 'account for 30%' },
+      { id: 'ph-3', bookId: 'phrase', word: 'attach importance to', phonetic: '', meaning: '重视', example: 'attach importance to education' },
+      { id: 'ph-4', bookId: 'phrase', word: 'bear in mind', phonetic: '', meaning: '牢记', example: 'bear in mind that...' },
+    ],
+  },
 ]
 
-// ====== 素材库 ======
+// ====== 素材库（按学科分类 + 按年级更换）=====
 export const MATERIALS: Material[] = [
-  { id: 'ma1', title: '坚持与积累：竹子定律', category: '议论文素材', excerpt: '竹子前四年仅长 3 厘米，第五年起每日疯长 30 厘米……', tags: ['坚持', '积累', '质变'], subject: 'chinese' },
-  { id: 'ma2', title: '科技伦理：AI 双刃剑', category: '议论文素材', excerpt: '人工智能在医疗与隐私间寻找平衡，技术向善是底线……', tags: ['科技', '伦理', '边界'], subject: 'chinese' },
-  { id: 'ma3', title: '环境类高级句式 5 则', category: '英语写作', excerpt: 'It is high time that we took action to...', tags: ['句式', '环境', '高级表达'], subject: 'english' },
-  { id: 'ma4', title: '人物传记：袁隆平', category: '议论文素材', excerpt: '禾下乘凉梦，一稻济世心……', tags: ['人物', '奉献', '理想'], subject: 'chinese' },
-  { id: 'ma5', title: '万能过渡衔接词组', category: '英语写作', excerpt: 'what is more, in addition, on the contrary...', tags: ['衔接', '过渡', '词组'], subject: 'english' },
+  // 语文
+  { id: 'ma1', title: '坚持与积累：竹子定律', category: '议论文素材', excerpt: '竹子前四年仅长 3 厘米，第五年起每日疯长 30 厘米。厚积方能薄发，量变终致质变。', tags: ['坚持', '积累', '质变'], subject: 'chinese', grade: '高一' },
+  { id: 'ma2', title: '科技伦理：AI 双刃剑', category: '议论文素材', excerpt: '人工智能在医疗与隐私间寻找平衡，技术向善是底线，创新与边界并行。', tags: ['科技', '伦理', '边界'], subject: 'chinese', grade: '高二' },
+  { id: 'ma3', title: '人物传记：袁隆平', category: '议论文素材', excerpt: '禾下乘凉梦，一稻济世心。把论文写在田野上，是知识分子的家国担当。', tags: ['人物', '奉献', '理想'], subject: 'chinese', grade: '高三' },
+  { id: 'ma4', title: '工匠精神：庖丁解牛', category: '议论文素材', excerpt: '手之所触，肩之所倚，砉然向然——专注与技艺的境界，进乎技矣。', tags: ['专注', '技艺', '境界'], subject: 'chinese', grade: '高二' },
+  { id: 'ma5', title: '青年担当：鲁迅弃医从文', category: '议论文素材', excerpt: '医治身体不如唤醒灵魂，以笔为枪，是青年的觉醒与选择。', tags: ['青年', '担当', '选择'], subject: 'chinese', grade: '高三' },
+  { id: 'ma6', title: '亲情细节：朱自清背影', category: '记叙素材', excerpt: '父亲攀上月台买橘子的背影，平淡中见深情，细节承载情感。', tags: ['亲情', '细节', '情感'], subject: 'chinese', grade: '初三' },
+  // 数学
+  { id: 'ma7', title: '数学思想：分类讨论', category: '方法素材', excerpt: '含参问题按参数取值分类，不重不漏，是严谨的逻辑训练。', tags: ['分类讨论', '逻辑', '严谨'], subject: 'math', grade: '高二' },
+  { id: 'ma8', title: '数学思想：数形结合', category: '方法素材', excerpt: '以形助数、以数解形，函数与图像互译，化抽象为直观。', tags: ['数形结合', '直观', '函数'], subject: 'math', grade: '高一' },
+  // 英语
+  { id: 'ma9', title: '环境类高级句式 5 则', category: '英语写作', excerpt: 'It is high time that we took action to protect our environment...', tags: ['句式', '环境', '高级表达'], subject: 'english', grade: '高二' },
+  { id: 'ma10', title: '万能过渡衔接词组', category: '英语写作', excerpt: 'what is more, in addition, on the contrary, as a matter of fact...', tags: ['衔接', '过渡', '词组'], subject: 'english', grade: '高一' },
+  { id: 'ma11', title: '人物描写好词好句', category: '英语写作', excerpt: 'a determined look, with a bright smile, eyes shining with hope...', tags: ['描写', '人物', '词汇'], subject: 'english', grade: '初三' },
+  // 物理
+  { id: 'ma12', title: '物理建模思想', category: '方法素材', excerpt: '把实际过程抽象为理想模型：质点、轻绳、匀强场——抓住主要矛盾。', tags: ['建模', '理想化', '主要矛盾'], subject: 'physics', grade: '高二' },
+  { id: 'ma13', title: '能量观与守恒', category: '方法素材', excerpt: '从做功与能量转化的视角看物理过程，守恒是解题的「定海神针」。', tags: ['能量', '守恒', '视角'], subject: 'physics', grade: '高三' },
 ]
 
-// ====== 学习统计（近 14 天）======
-export const STUDY_STATS: StudyStat[] = Array.from({ length: 14 }).map((_, i) => {
-  const base = [45, 60, 30, 75, 50, 90, 40, 65, 80, 55, 35, 70, 85, 60]
-  const acc = [82, 78, 88, 75, 80, 72, 85, 79, 74, 83, 90, 76, 71, 81]
-  const qs = [18, 24, 12, 30, 20, 36, 16, 26, 32, 22, 14, 28, 34, 24]
-  const d = new Date(2026, 5, 28 + i)
-  return {
-    date: `${d.getMonth() + 1}/${d.getDate()}`,
-    minutes: base[i],
-    questions: qs[i],
-    accuracy: acc[i],
-  }
-})
-
-// ====== 各学科掌握度趋势 ======
-export const MASTERY_TREND = [
-  { date: '6/14', math: 50, physics: 40, english: 72, chinese: 65 },
-  { date: '6/21', math: 54, physics: 45, english: 75, chinese: 68 },
-  { date: '6/28', math: 58, physics: 48, english: 77, chinese: 69 },
-  { date: '7/5', math: 61, physics: 52, english: 79, chinese: 70 },
-  { date: '7/12', math: 64, physics: 58, english: 80, chinese: 72 },
+// ====== 模板库（按学科分类 + 按年级更换）=====
+export const TEMPLATES: Template[] = [
+  // 语文
+  { id: 't1', title: '议论文「并列递进式」结构', subject: 'chinese', category: '作文模板', use: '适用：稳扎稳打的议论分析', body: '引论（提出中心论点）→ 分论一 → 分论二 → 分论三（递进）→ 结论（升华/呼应）。', tags: ['议论文', '结构', '递进'], grade: '高二' },
+  { id: 't2', title: '文言文翻译「留删换调补」五步', subject: 'chinese', category: '解题套路', use: '适用：文言翻译题', body: '留（专有名词）删（虚词）换（古义今译）调（倒装还原）补（省略补出）。', tags: ['文言文', '翻译', '五步法'], grade: '高二' },
+  { id: 't3', title: '记叙文「细节承载情感」写法', subject: 'chinese', category: '作文模板', use: '适用：以小见大的记叙', body: '细节描写→情感抒发→点题升华，避免空泛抒情，让画面说话。', tags: ['记叙文', '细节', '情感'], grade: '初三' },
+  { id: 't4', title: '议论文辩证立意模板', subject: 'chinese', category: '作文模板', use: '适用：思辨型作文', body: '肯定 A 的价值 → 指出 A 的局限 → 引入 B 与 A 互补 → 立意「A 与 B 相济」。', tags: ['辩证', '立意', '思辨'], grade: '高三' },
+  // 数学
+  { id: 't5', title: '立体几何建系答题模板', subject: 'math', category: '解题套路', use: '适用：空间角与距离计算', body: '①建立空间直角坐标系 ②标出关键点坐标 ③求方向向量/法向量 ④代入夹角公式 ⑤结论。', tags: ['立体几何', '空间向量', '建系'], grade: '高二' },
+  { id: 't6', title: '导数大题答题规范', subject: 'math', category: '解题套路', use: '适用：导数综合题', body: '求导 → 解 f′=0 找驻点 → 列表判单调 → 求极值/最值 → 结合端点比较。', tags: ['导数', '单调性', '规范'], grade: '高三' },
+  { id: 't7', title: '含参讨论通用步骤', subject: 'math', category: '解题套路', use: '适用：含参方程/不等式', body: '定主元 → 找临界点 → 分区间讨论 → 逐段求解 → 取并集。', tags: ['分类讨论', '含参', '步骤'], grade: '高一' },
+  // 英语
+  { id: 't8', title: '英语作文「观点+论据」万能段', subject: 'english', category: '写作模板', use: '适用：议论文主体段', body: 'Topic sentence + Explanation + Example + Link。开头亮观点，举例支撑，回扣主题。', tags: ['英语写作', '段落', '论据'], grade: '高二' },
+  { id: 't9', title: '应用文（邀请函）模板', subject: 'english', category: '写作模板', use: '适用：书信/邀请类', body: 'Dear ..., I\'m writing to invite you to... 时间/地点/活动安排/期待回复. Yours, ...', tags: ['应用文', '邀请函', '格式'], grade: '高三' },
+  { id: 't10', title: '完形填空三遍法', subject: 'english', category: '解题套路', use: '适用：英语完形', body: '第一遍通读定主旨，第二遍带空选答案，第三遍代入回读验证。', tags: ['完形', '三遍法', '阅读'], grade: '高一' },
+  // 物理
+  { id: 't11', title: '电磁感应计算题答题规范', subject: 'physics', category: '解题套路', use: '适用：导体棒切割类综合题', body: '受力分析→安培力 F=BIL→动生电动势 E=BLv→收尾 v=mgR/B²L²→能量守恒求 Q。', tags: ['电磁感应', '规范', '能量守恒'], grade: '高二' },
+  { id: 't12', title: '牛顿定律瞬时分析模板', subject: 'physics', category: '解题套路', use: '适用：瞬时力突变问题', body: '区分刚性(轻绳)与弹性(弹簧)→突变瞬间弹性力不变、刚性力瞬变→列方程求加速度。', tags: ['牛顿定律', '瞬时', '突变'], grade: '高一' },
 ]
+
+// 注：试卷(ExamPaper)/错题(Mistake)属用户数据，默认为空，
+// 由 DataContext 在用户录入试卷、AI 诊断后生成并按年级隔离，不在 mock 预置。
+// 学习记录/收藏/单词进度同理，均由用户行为产生，不预置虚假数据。

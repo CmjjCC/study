@@ -12,32 +12,37 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  Legend,
 } from 'recharts'
 import { Clock, ListChecks, Target, TrendingUp, FileUp, Swords, ArrowRight, Sparkles } from 'lucide-react'
-import { Card, SectionTitle, StatTile, Button, PriorityBadge, WeaknessTypeBadge, Progress } from '@/components/ui'
-import { SUBJECTS, MASTERY_TREND, STUDY_STATS } from '@/data/mock'
+import { Card, SectionTitle, StatTile, Button, Badge, PriorityBadge, WeaknessTypeBadge, Progress } from '@/components/ui'
+import { SUBJECTS } from '@/data/mock'
 import { useData } from '@/context/DataContext'
 import { useApp } from '@/context/AppContext'
 
-const SUBJECT_NAME: Record<string, string> = {
-  chinese: '语文',
-  math: '数学',
-  english: '英语',
-  physics: '物理',
+function EmptyChart({ text }: { text: string }) {
+  return (
+    <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-dashed text-center">
+      <p className="text-sm font-medium text-main">暂无数据</p>
+      <p className="mt-1 max-w-xs text-xs text-muted">{text}</p>
+    </div>
+  )
 }
 
 export default function Dashboard() {
   const { grade } = useApp()
-  const { weaknesses, papers } = useData()
+  const { weaknesses, papers, studyLog, studyStats, subjectMastery } = useData()
   const enabledSubjects = SUBJECTS.filter((s) => s.enabled)
-  const radarData = enabledSubjects.map((s) => ({ subject: s.name, mastery: s.mastery }))
-  const totalMinutes = STUDY_STATS.reduce((a, b) => a + b.minutes, 0)
-  const totalQ = STUDY_STATS.reduce((a, b) => a + b.questions, 0)
-  const avgAcc = Math.round(STUDY_STATS.reduce((a, b) => a + b.accuracy, 0) / STUDY_STATS.length)
+
+  const totalMin = studyLog.reduce((a, b) => a + b.minutes, 0)
+  const totalQ = studyLog.reduce((a, b) => a + b.questions, 0)
+  const totalC = studyLog.reduce((a, b) => a + b.correct, 0)
+  const avgAcc = totalQ ? Math.round((totalC / totalQ) * 100) : 0
+
   const topWeakness = [...weaknesses]
     .sort((a, b) => ({ 高: 0, 中: 1, 低: 2 }[a.priority]) - ({ 高: 0, 中: 1, 低: 2 }[b.priority]))
     .slice(0, 3)
+  const radarData = enabledSubjects.map((s) => ({ subject: s.name, mastery: subjectMastery(s.key) ?? 0 }))
+  const hasMastery = weaknesses.length > 0
 
   return (
     <div className="space-y-6">
@@ -70,48 +75,52 @@ export default function Dashboard() {
         <div className="absolute -right-2 bottom-2 h-24 w-24 rounded-full bg-white/5" />
       </div>
 
-      {/* 统计 Tile 行 */}
+      {/* 统计 Tile 行（真实数据） */}
       <div className="grid-cards-4">
-        <StatTile label="本周学习时长" value={Math.round(totalMinutes / 60)} unit="小时" hint="较上周 +8%" icon={<Clock size={16} />} />
-        <StatTile label="本周刷题量" value={totalQ} unit="题" hint="较上周 +12%" icon={<ListChecks size={16} />} tone="#3b82f6" />
-        <StatTile label="平均正确率" value={avgAcc} unit="%" hint="较上周 +3%" icon={<TrendingUp size={16} />} tone="#a855f7" />
+        <StatTile label="累计学习时长" value={totalMin ? Math.round(totalMin / 60) : 0} unit="小时" hint={totalMin ? `累计 ${totalMin} 分钟` : '暂无学习记录'} icon={<Clock size={16} />} />
+        <StatTile label="累计刷题量" value={totalQ} unit="题" hint={totalQ ? `答对 ${totalC} 题` : '暂无刷题记录'} icon={<ListChecks size={16} />} tone="#3b82f6" />
+        <StatTile label="平均正确率" value={totalQ ? avgAcc : '—'} unit={totalQ ? '%' : ''} hint={totalQ ? `基于 ${totalQ} 题` : '暂无记录'} icon={<TrendingUp size={16} />} tone="#a855f7" />
         <StatTile label={`已诊断弱点（${grade}）`} value={weaknesses.length} unit="项" hint={`高优先级 ${weaknesses.filter((w) => w.priority === '高').length} 项`} icon={<Target size={16} />} tone="#f59e0b" />
       </div>
 
       {/* 主体网格：趋势 + 雷达 */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <SectionTitle title="各学科掌握度趋势" subtitle="近五周各学科掌握度变化" />
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={MASTERY_TREND} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#eef1ec" />
-                <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#94a39b' }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: '#94a39b' }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #eef1ec', fontSize: 12 }} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line type="monotone" dataKey="math" name="数学" stroke="#3b82f6" strokeWidth={2.5} dot={false} />
-                <Line type="monotone" dataKey="physics" name="物理" stroke="#f59e0b" strokeWidth={2.5} dot={false} />
-                <Line type="monotone" dataKey="english" name="英语" stroke="#a855f7" strokeWidth={2.5} dot={false} />
-                <Line type="monotone" dataKey="chinese" name="语文" stroke="#ef6c5a" strokeWidth={2.5} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <SectionTitle title="学习时长趋势" subtitle="每日学习分钟数（真实记录）" />
+          {studyStats.length === 0 ? (
+            <EmptyChart text="暂无学习数据。开始靶向训练后，学习时长将记录于此。" />
+          ) : (
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={studyStats} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eef1ec" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#94a39b' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, fill: '#94a39b' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #eef1ec', fontSize: 12 }} />
+                  <Line type="monotone" dataKey="minutes" name="时长(分)" stroke="#33a566" strokeWidth={2.5} dot={{ r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </Card>
 
         <Card>
-          <SectionTitle title="学科能力分布" subtitle="当前掌握度雷达" />
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={radarData} outerRadius="72%">
-                <PolarGrid stroke="#eef1ec" />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12, fill: '#5b6b62' }} />
-                <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#94a39b' }} axisLine={false} />
-                <Radar dataKey="mastery" stroke="#33a566" fill="#33a566" fillOpacity={0.25} strokeWidth={2} />
-                <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #eef1ec', fontSize: 12 }} />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
+          <SectionTitle title="学科能力分布" subtitle="基于弱点档案计算" />
+          {!hasMastery ? (
+            <EmptyChart text="暂无掌握度数据。录入试卷诊断弱点后展示。" />
+          ) : (
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={radarData} outerRadius="72%">
+                  <PolarGrid stroke="#eef1ec" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12, fill: '#5b6b62' }} />
+                  <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#94a39b' }} axisLine={false} />
+                  <Radar dataKey="mastery" stroke="#33a566" fill="#33a566" fillOpacity={0.25} strokeWidth={2} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #eef1ec', fontSize: 12 }} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </Card>
       </div>
 
@@ -120,7 +129,7 @@ export default function Dashboard() {
         <Card className="lg:col-span-2">
           <SectionTitle
             title="急需补强的薄弱点"
-            subtitle="AI 诊断 · 按优先级排序"
+            subtitle={`AI 诊断 · 当前年级 ${grade} · 按优先级排序`}
             right={
               <Link to="/weakness" className="text-xs font-medium text-brand-600 hover:underline">
                 查看全部 <ArrowRight size={12} className="inline" />
@@ -166,7 +175,7 @@ export default function Dashboard() {
 
         <Card>
           <SectionTitle
-            title="近期试卷"
+            title={`近期试卷（${grade}）`}
             right={
               <Link to="/paper-upload" className="text-xs font-medium text-brand-600 hover:underline">
                 录入 <ArrowRight size={12} className="inline" />
@@ -194,13 +203,7 @@ export default function Dashboard() {
                       <p className="truncate text-sm font-medium text-main">{e.name}</p>
                       <p className="text-xs text-muted">{e.date} · {e.status}</p>
                     </div>
-                    {e.score > 0 ? (
-                      <span className="text-sm font-semibold text-main">
-                        {e.score}<span className="text-xs text-muted">/{e.total}</span>
-                      </span>
-                    ) : (
-                      <span className="text-xs text-amber-600">解析中</span>
-                    )}
+                    <Badge tone="green">{e.status}</Badge>
                   </div>
                 )
               })}
